@@ -8,13 +8,13 @@ Photo your handwritten journal pages, get transcribed markdown with metadata and
 
 ```bash
 # Install deps
-bun install
+pnpm install
 
 # Set your Anthropic API key
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # Run the server
-bun run dev
+pnpm dev
 ```
 
 Server runs on `http://localhost:3847`. Test UI at `/test`.
@@ -107,7 +107,7 @@ ngrok http 3847
 
 ## Stack
 
-- **Runtime:** Bun
+- **Runtime:** Node.js + tsx
 - **Framework:** Hono
 - **AI:** Claude (Anthropic) - vision model for transcription
 - **Future:** Embeddings for search, SQLite/Postgres for storage
