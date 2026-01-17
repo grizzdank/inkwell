@@ -1,0 +1,24 @@
+name: Inkwell
+options:
+  bundleIdPrefix: com.davegraham
+settings:
+  base:
+    IPHONEOS_DEPLOYMENT_TARGET: 18.0
+targets:
+  Inkwell:
+    type: application
+    platform: iOS
+    sources:
+      - path: Inkwell
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.davegraham.inkwell
+    info:
+      path: Inkwell/Info.plist
+      properties:
+        CFBundleDisplayName: Inkwell
+        NSCameraUsageDescription: Capture journal pages for transcription.
+        NSPhotoLibraryUsageDescription: Select journal photos to process.
+        NSPhotoLibraryAddUsageDescription: Save processed images if needed.
+    entitlements:
+      path: Inkwell/Inkwell.entitlements
