@@ -1,4 +1,4 @@
-# 🐙 Inkwell
+# ✒️ Inkwell
 
 **Analog journal → digital brain.**
 
