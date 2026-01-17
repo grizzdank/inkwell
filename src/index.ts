@@ -20,6 +20,40 @@ interface AnalysisResult {
   raw: string;
 }
 
+const DEFAULT_MAX_IMAGE_BYTES = 15 * 1024 * 1024;
+const DEFAULT_PROVIDER_TIMEOUT_MS = 45_000;
+
+function getMaxImageBytes(): number {
+  const raw = process.env.INKWELL_MAX_IMAGE_BYTES;
+  const parsed = raw ? Number(raw) : DEFAULT_MAX_IMAGE_BYTES;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_IMAGE_BYTES;
+}
+
+function getProviderTimeoutMs(): number {
+  const raw = process.env.INKWELL_PROVIDER_TIMEOUT_MS;
+  const parsed = raw ? Number(raw) : DEFAULT_PROVIDER_TIMEOUT_MS;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PROVIDER_TIMEOUT_MS;
+}
+
+function estimateBase64Bytes(base64: string): number {
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 // Gemini for OCR (fast, cheap, good at handwriting)
 async function transcribeWithGemini(
   imageBase64: string,
@@ -30,7 +64,7 @@ async function transcribeWithGemini(
 
   const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
-  const response = await fetch(
+  const response = await fetchWithTimeout(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: "POST",
@@ -56,12 +90,13 @@ async function transcribeWithGemini(
           maxOutputTokens: 4096,
         },
       }),
-    }
+    },
+    getProviderTimeoutMs()
   );
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Gemini API error: ${err}`);
+    throw new Error(`Gemini API error (${response.status}): ${err}`);
   }
 
   const data = await response.json();
@@ -132,15 +167,15 @@ async function analyzeWithClaude(
     };
   }
 
-  const response = await fetch(apiUrl, {
+  const response = await fetchWithTimeout(apiUrl, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
-  });
+  }, getProviderTimeoutMs());
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Claude API error: ${err}`);
+    throw new Error(`Claude API error (${response.status}): ${err}`);
   }
 
   const data = await response.json();
@@ -251,7 +286,22 @@ app.get("/", (c) =>
 app.post("/transcribe", async (c) => {
   try {
     const { image, mediaType = "image/jpeg" } = await c.req.json();
-    if (!image) return c.json({ error: "Missing 'image' (base64)" }, 400);
+    if (!image) return c.json({ success: false, error: "Missing 'image' (base64)" }, 400);
+    if (typeof image !== "string") {
+      return c.json({ success: false, error: "'image' must be a base64 string" }, 400);
+    }
+    if (typeof mediaType !== "string" || !mediaType.includes("/")) {
+      return c.json({ success: false, error: "Invalid 'mediaType'" }, 400);
+    }
+
+    const maxBytes = getMaxImageBytes();
+    const estimatedBytes = estimateBase64Bytes(image);
+    if (estimatedBytes > maxBytes) {
+      return c.json(
+        { success: false, error: `Image too large (max ${maxBytes} bytes)` },
+        400
+      );
+    }
 
     const result = await transcribeWithGemini(image, mediaType);
 
@@ -265,7 +315,7 @@ app.post("/transcribe", async (c) => {
   } catch (error) {
     console.error("Transcription error:", error);
     return c.json(
-      { error: "Transcription failed", details: String(error) },
+      { success: false, error: "Transcription failed", details: String(error) },
       500
     );
   }
@@ -275,7 +325,12 @@ app.post("/transcribe", async (c) => {
 app.post("/analyze", async (c) => {
   try {
     const { transcription } = await c.req.json();
-    if (!transcription) return c.json({ error: "Missing 'transcription'" }, 400);
+    if (!transcription) {
+      return c.json({ success: false, error: "Missing 'transcription'" }, 400);
+    }
+    if (typeof transcription !== "string") {
+      return c.json({ success: false, error: "'transcription' must be a string" }, 400);
+    }
 
     const result = await analyzeWithClaude(transcription);
 
@@ -286,7 +341,10 @@ app.post("/analyze", async (c) => {
     });
   } catch (error) {
     console.error("Analysis error:", error);
-    return c.json({ error: "Analysis failed", details: String(error) }, 500);
+    return c.json(
+      { success: false, error: "Analysis failed", details: String(error) },
+      500
+    );
   }
 });
 
@@ -294,7 +352,25 @@ app.post("/analyze", async (c) => {
 app.post("/process", async (c) => {
   try {
     const { image, mediaType = "image/jpeg", analyze = true } = await c.req.json();
-    if (!image) return c.json({ error: "Missing 'image' (base64)" }, 400);
+    if (!image) return c.json({ success: false, error: "Missing 'image' (base64)" }, 400);
+    if (typeof image !== "string") {
+      return c.json({ success: false, error: "'image' must be a base64 string" }, 400);
+    }
+    if (typeof mediaType !== "string" || !mediaType.includes("/")) {
+      return c.json({ success: false, error: "Invalid 'mediaType'" }, 400);
+    }
+    if (typeof analyze !== "boolean") {
+      return c.json({ success: false, error: "'analyze' must be a boolean" }, 400);
+    }
+
+    const maxBytes = getMaxImageBytes();
+    const estimatedBytes = estimateBase64Bytes(image);
+    if (estimatedBytes > maxBytes) {
+      return c.json(
+        { success: false, error: `Image too large (max ${maxBytes} bytes)` },
+        400
+      );
+    }
 
     // Step 1: Transcribe with Gemini
     const transcription = await transcribeWithGemini(image, mediaType);
@@ -326,7 +402,10 @@ app.post("/process", async (c) => {
     });
   } catch (error) {
     console.error("Process error:", error);
-    return c.json({ error: "Processing failed", details: String(error) }, 500);
+    return c.json(
+      { success: false, error: "Processing failed", details: String(error) },
+      500
+    );
   }
 });
 

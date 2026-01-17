@@ -130,6 +130,8 @@ ngrok http 3847
 | `GEMINI_MODEL` | No | Default: `gemini-1.5-flash` |
 | `CLAUDE_MODEL` | No | Default: `claude-sonnet-4-20250514` |
 | `PORT` | No | Default: `3847` |
+| `INKWELL_MAX_IMAGE_BYTES` | No | Max base64 image size (bytes), default: `15728640` |
+| `INKWELL_PROVIDER_TIMEOUT_MS` | No | Provider request timeout (ms), default: `45000` |
 
 ## Roadmap
 

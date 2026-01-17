@@ -1,168 +1,128 @@
-# Inkwell App — Technical Plan (Draft)
+# Inkwell — Technical Plan (Repo-Grounded, iPhone-Focused)
 
-> Note: In the current workspace (`/home/daveg/pulpito`) there is **no `README.md`** and no Inkwell source tree (only personal docs/notes). This plan is therefore **structure-first** and includes **explicit placeholders** for the processing details “as described in README.md”. Once the actual Inkwell repo is available, the integration + pipeline steps can be made concrete.
+Plan only. This document reflects the current single-file Node/TypeScript Hono service in `src/index.ts` and the pipeline described in `README.md`.
 
-## 1) Product Summary (What we’re building)
-- iPhone-first app that captures a **photo of a journal page**.
-- Runs an on-device / server-assisted **processing pipeline** (per Inkwell README) to produce a clean digital record.
-- Presents results in a friendly UI, supports review/corrections, and stores originals + outputs.
+## 1) Recommendation (chosen for V1)
+**iOS Native (SwiftUI + AVFoundation).**  
+Reason: capture quality and scanner-like UX are core to handwriting OCR accuracy; iOS gives more reliable camera control, page detection, and offline handling. The existing Node service remains the processing backend.
 
-## 2) Architecture Choice: iOS Native vs PWA (iPhone)
+## 2) Current Backend Baseline (as implemented)
+- Single-file server: `src/index.ts` with Hono + @hono/node-server.
+- Endpoints:
+  - `GET /` health + version + endpoint map.
+  - `POST /transcribe` → Gemini OCR only.
+  - `POST /analyze` → Claude analysis only.
+  - `POST /process` → full pipeline (transcribe → analyze).
+  - `GET /test` → built-in HTML test UI.
+- Providers:
+  - OCR: Gemini 1.5 Flash via Google AI Studio API.
+  - Analysis: Claude via OpenRouter (preferred) or direct Anthropic API.
+- Response shape:
+  - `success` boolean where appropriate.
+  - Transcription returns `transcription`, `metadata`, `markdown`, `provider`.
+  - Analysis returns `analysis`/`insights`, `provider`.
+  - `/process` returns `transcription` object + optional `analysis`.
+- Error handling:
+  - JSON error responses; analysis failure in `/process` is non-fatal.
 
-### Option A — iOS Native (Recommended if quality + capture UX matter)
-**Pros**
-- Best camera control: focus/exposure, lens selection, stabilization, Live Text integration.
-- Best image pre-processing: fast on-device CV, Metal/Accelerate, better memory control.
-- Background work: `BGTaskScheduler`, reliable uploads, offline-first sync.
-- Local privacy: can keep more steps on-device; strong sandboxing.
+## 3) Client Architecture (iOS Native, V1)
+- **UI:** SwiftUI.
+- **Camera:** AVFoundation with live page rectangle detection (Vision).
+- **Flow:**
+  1) Capture page photo with guidance overlay.
+  2) Review crop/rotate (optional).
+  3) Send to backend `/process` with base64 + mediaType.
+  4) Render transcription markdown + analysis sections.
+- **Offline handling:** Store originals and queued uploads in app sandbox; retry in background.
 
-**Cons**
-- Higher dev cost (Swift/SwiftUI, iOS build + distribution).
-- App Store review + release overhead.
-- Less portable (iOS-only unless also building Android).
+### PWA (React) — defer to later
+- Keep as a V2 fallback if App Store distribution becomes a blocker.
 
-### Option B — PWA (Recommended if speed-to-market matters)
-**Pros**
-- Single codebase: web stack, easier iteration, easier sharing.
-- No App Store gate; instant deploy.
-- Good enough for “upload photo → process → show result”.
+## 4) Visual Direction (Japanese calligraphy, elegant, clean, interesting)
+Design intent: calm, refined, tactile. Blend negative space with ink-like accents.
 
-**Cons**
-- iOS Safari limitations: camera APIs + file handling are weaker; inconsistent capture UX.
-- Offline/background sync less reliable.
-- On-device ML/CV is possible (WASM/WebGPU) but more complex and less predictable.
+**Typography**
+- Primary: a modern Mincho-inspired serif (e.g., "Noto Serif JP", "Yu Mincho" on iOS).
+- Secondary: a neutral sans for UI chrome (e.g., "SF Pro" fallback for controls).
+- Use generous line-height and tight typographic hierarchy.
 
-### Recommendation
-- **Start with iOS Native** if the differentiator is capture quality, page detection, offline, and a “scanner-like” flow.
-- **Start with PWA** if the pipeline is mostly server-side and capture quality can be “good enough” using file upload + light client guidance.
+**Color**
+- Base: warm paper whites (#F7F3EE) and charcoal ink (#2A2724).
+- Accents: sumi ink wash gray (#6B6762) and muted indigo (#2E3A4F).
+- Use subtle gradients and paper texture motifs (no flat white).
 
-## 3) Tech Stack Recommendations
+**Layout**
+- Large margins, asymmetric rhythm, vertical breathing room.
+- Use brush-stroke divider motifs sparingly.
+- Focus on a single task per screen.
 
-### iOS Native stack (primary recommendation)
-- UI: **SwiftUI** (+ `PhotosUI`, `AVFoundation` for camera)
-- Camera/scanning: `AVCaptureSession` + rectangle/page detection (Vision)
-- Image pre-processing: **Vision**, **Core Image**, **Accelerate**
-- On-device OCR (optional): **Vision OCR**; server OCR fallback
-- Networking: `URLSession` + async/await
-- Storage:
-  - Local: **Core Data** or **SQLite** (via GRDB) for metadata
-  - Files: app sandbox for images/PDF outputs
-- Sync (optional): CloudKit or custom API
-- Analytics/Crash: optional (Sentry/Firebase)
+**Motion**
+- Soft fade-in for results, gentle parallax on paper texture.
+- Staggered reveal for analysis sections to feel “ink spreading”.
 
-### PWA stack (secondary)
-- UI: **React** or **SvelteKit**
-- Camera/file input: `<input capture>` + optional getUserMedia where supported
-- Processing: server-first; client does light transforms (crop/rotate/compress)
-- Storage: IndexedDB + Service Worker caching
+**Iconography**
+- Minimal line icons; avoid glossy or skeuomorphic UI.
 
-### Backend (if processing isn’t fully on-device)
-- API: Node/Express or FastAPI
-- Processing workers: queue-based (BullMQ / Celery)
-- Storage: S3-compatible for originals/derivatives
-- DB: Postgres for jobs + documents + user data
+## 5) iOS Development Workflow (optional, based on Dimillian/Skills)
+Use these focused workflows to speed up iOS development and QA:
+- **iOS Debugger Agent:** build/run on simulators, interact with UI, capture logs/screenshots.
+- **SwiftUI UI Patterns:** guidance for NavigationStack, sheets, and state ownership.
+- **SwiftUI View Refactor:** standardize view structure and Observation usage.
+- **Swift Concurrency Expert:** resolve Sendable/actor-isolation issues early.
+- **SwiftUI Performance Audit:** catch janky scrolling and excessive re-renders.
 
-## 4) Key Components
+## 6) Data & Storage (V1 choice + future options)
+**V1: iCloud Drive / iCloud Sync**
+- Store markdown files in a user-visible folder with images alongside.
+- Pros: native sync, user control, minimal server state.
+- Cons: iOS-only, dependency on iCloud state.
 
-### 4.1 Photo Capture
-**Goals**
-- Fast “scan page” flow with real-time guidance.
+**Future options**
+- Local-only (no sync).
+- Obsidian vault export (file-based).
+- Supabase (auth + multi-device + search).
 
-**iOS Native approach**
-- `AVFoundation` camera view.
-- Vision rectangle detection to auto-detect page bounds.
-- Capture high-res still; optionally burst for best focus.
-- UX: “Hold steady” + auto-capture when stable.
+## 7) Work Plan (phased)
 
-**PWA approach**
-- Capture via file input; optionally request camera.
-- Provide overlay grid and “keep page within frame” guidance.
+### Phase A — Backend reliability (no schema breaks)
+1. Validate base64 length and mediaType format.
+2. Add request timeouts for Gemini and Claude.
+3. Ensure all POST responses include `success` (no key renames).
 
-### 4.2 Processing Pipeline (per Inkwell README)
-> Replace the below with the actual steps once the README is available.
+### Phase B — Client MVP (iOS Native)
+1. Build capture → review → upload flow.
+2. Display transcription markdown + analysis sections.
+3. Local history list (basic).
 
-Proposed pipeline stages (common for journal-page digitization):
-1. **Ingest**: receive image, store original.
-2. **Detect page**: find corners, perspective transform, deskew.
-3. **Normalize**: contrast/levels, remove shadows, denoise.
-4. **Segment** (optional): isolate writing regions vs margins.
-5. **OCR / transcription**: extract text (handwriting vs printed changes approach).
-6. **Post-process**: correct common OCR issues; structure into paragraphs/lines.
-7. **Export**: searchable PDF, Markdown, plain text, and/or image.
-8. **Human review**: user edits text / confirms outputs.
+### Phase C — iCloud storage
+1. Implement iCloud container + file coordination.
+2. Save markdown + images per entry.
+3. Document folder structure and naming in README.
 
-**Where each step runs**
-- On-device for steps 1–3 (best UX + privacy), server for OCR/LLM-heavy steps.
-- If privacy-critical, keep OCR local where possible.
+### Phase D — Quality and polish
+1. Better OCR inputs: image resize/compress presets.
+2. UI polish per design guidelines.
+3. Add “analysis optional” toggle.
 
-### 4.3 UI/UX
-- Primary screens:
-  - Capture (scanner-like)
-  - Review crop/rotate (before processing)
-  - Processing progress (job state)
-  - Result view: image + extracted text
-  - Edit/correct text
-  - History library (pages, sessions, tags)
-- Accessibility: large text, voiceover labels.
+## 8) Testing Plan (repo-based)
+- Start server: `pnpm dev`.
+- Verify `/test` UI loads at `http://localhost:3847/test`.
+- Use a sample image to confirm:
+  - `/transcribe` returns markdown + metadata.
+  - `/process` returns transcription + analysis.
+- Negative tests:
+  - Missing `image` returns JSON error with 400.
+  - Missing API keys returns JSON error with 500.
 
-### 4.4 Storage Model
-- Entities:
-  - `Document` (journal entry/page), `Scan` (original image), `Derivative` (cropped/cleaned image), `Transcript` (text + metadata), `ProcessingJob` (status)
-- Offline-first:
-  - Store local originals + metadata; sync later.
-  - Retry uploads and processing.
+## 9) iCloud Structure + Local Index (confirmed)
+- **Folder convention:** `Inkwell/YYYY/MM-DD/` with files:
+  - `entry.md` (transcription markdown + metadata frontmatter)
+  - `analysis.md` (analysis output)
+  - `original.jpg` (source image)
+- **Local index:** lightweight `index.json` stored in app sandbox for fast browsing;
+  rebuildable from iCloud if missing.
 
-### 4.5 Security/Privacy
-- At rest: iOS data protection; optional encrypted DB.
-- In transit: TLS, signed URLs for uploads.
-- Data retention: user-controlled delete; minimize server copies.
-
-## 5) Integration Points with Existing Inkwell Repo Code
-- **Blocked**: In this workspace there is no Inkwell codebase to reference.
-
-Once the Inkwell repo is available, identify:
-- Existing processing scripts/services (OCR, cleanup, LLM prompt templates, etc.).
-- Expected input/output formats (image resolution, JSON schema, PDF generation).
-- Where to host processing (local library vs HTTP service).
-- Reusable UI assets or any existing web frontend.
-
-## 6) Estimated Timeline / Scope
-
-### Phase 0 — Repo alignment (0.5–1 day)
-- Confirm the pipeline steps from `README.md`.
-- Decide iOS vs PWA based on pipeline location (device/server).
-
-### Phase 1 — MVP capture + upload + results (1–2 weeks)
-- Capture page photo (or upload) + manual crop.
-- Send to processing endpoint (or local pipeline stub).
-- Display extracted text + cleaned image.
-- Store scan history locally.
-
-### Phase 2 — Quality & usability (1–2 weeks)
-- Auto page detection + deskew.
-- Better processing progress + retry.
-- Basic text editing + export.
-
-### Phase 3 — “Delight” + robustness (2–4 weeks)
-- Offline-first + background sync.
-- Tags/search, multi-page entries, PDF bundle export.
-- Privacy controls, iCloud/backup.
-
-## 7) Concrete Next Steps
-1. Add/point me to the actual **Inkwell repo** (or paste `README.md`).
-2. Decide architecture (iOS native vs PWA) with two questions:
-   - Is processing mostly server-side?
-   - Is scanning UX a core differentiator?
-3. Define pipeline I/O contract:
-   - Input image constraints (min DPI, max size)
-   - Output schemas (text, bounding boxes, PDF)
-4. Choose MVP “happy path” and define success metrics.
-
----
-
-## Appendix: Open Questions (to finalize plan)
-- What exactly are the README’s processing steps and outputs?
-- Handwriting recognition required, or typed text only?
-- Single-page only, or multi-page sessions?
-- Local-only storage acceptable, or must sync?
-- Export formats: PDF, Markdown, Obsidian, Notion, etc.?
+## 10) Local iOS Testing Notes (with Tailscale)
+- Use your Mac’s Tailscale IP from the iPhone to reach the local backend:
+  `http://<mac-tailscale-ip>:3847`
+- Simulator can use `http://localhost:3847` directly.
