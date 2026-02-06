@@ -7,16 +7,12 @@ struct ResultView: View {
         VStack(alignment: .leading, spacing: 16) {
             if let transcription = response.transcription {
                 SectionHeader(title: "Transcription")
-                Text(transcription.markdown)
-                    .font(.system(.body, design: .serif))
-                    .textSelection(.enabled)
+                MarkdownText(transcription.markdown)
             }
 
             if let analysis = response.analysis {
                 SectionHeader(title: "Analysis")
-                Text(analysis.insights)
-                    .font(.system(.body, design: .serif))
-                    .textSelection(.enabled)
+                MarkdownText(analysis.insights)
             }
 
             if let error = response.error {
@@ -26,16 +22,6 @@ struct ResultView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct SectionHeader: View {
-    let title: String
-
-    var body: some View {
-        Text(title)
-            .font(.system(.headline, design: .serif))
-            .padding(.bottom, 4)
     }
 }
 

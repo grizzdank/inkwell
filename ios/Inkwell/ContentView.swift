@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("apiBaseURL") private var apiBaseURL = AppConfig.defaultBaseURL
+    @AppStorage("analyzeEnabled") private var analyzeEnabled = AppConfig.defaultAnalyzeEnabled
 
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
@@ -10,6 +11,8 @@ struct ContentView: View {
     @State private var statusMessage: String?
     @State private var processResponse: ProcessResponse?
     @State private var showingSettings = false
+    @State private var showingScanner = false
+    @StateObject private var historyStore = HistoryStore()
 
     var body: some View {
         NavigationStack {
@@ -25,6 +28,11 @@ struct ContentView: View {
             .background(Color(red: 0.97, green: 0.95, blue: 0.93))
             .navigationTitle("Inkwell")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink("History") {
+                        HistoryListView(store: historyStore)
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Settings") {
                         showingSettings = true
@@ -35,6 +43,23 @@ struct ContentView: View {
                 NavigationStack {
                     SettingsView()
                 }
+            }
+            .sheet(isPresented: $showingScanner) {
+                CameraScannerView(
+                    onScan: { image in
+                        selectedImage = image
+                        statusMessage = nil
+                        processResponse = nil
+                        showingScanner = false
+                    },
+                    onCancel: {
+                        showingScanner = false
+                    },
+                    onError: { error in
+                        statusMessage = error.localizedDescription
+                        showingScanner = false
+                    }
+                )
             }
             .onChange(of: selectedItem) { _, newItem in
                 guard let newItem else { return }
@@ -57,8 +82,15 @@ struct ContentView: View {
 
     private var pickerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            PhotosPicker("Select a journal photo", selection: $selectedItem, matching: .images)
+            HStack(spacing: 12) {
+                Button("Scan with Camera") {
+                    showingScanner = true
+                }
                 .buttonStyle(.borderedProminent)
+
+                PhotosPicker("Choose Photo", selection: $selectedItem, matching: .images)
+                    .buttonStyle(.bordered)
+            }
 
             if let image = selectedImage {
                 Image(uiImage: image)
@@ -72,12 +104,15 @@ struct ContentView: View {
 
     private var actionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Toggle("Run analysis", isOn: $analyzeEnabled)
+                .disabled(isProcessing)
+
             Button(action: processImage) {
                 HStack {
                     if isProcessing {
                         ProgressView()
                     }
-                    Text(isProcessing ? "Processing..." : "Process with Analysis")
+                    Text(isProcessing ? "Processing..." : analyzeEnabled ? "Process with Analysis" : "Transcribe Only")
                 }
             }
             .buttonStyle(.bordered)
@@ -130,11 +165,13 @@ struct ContentView: View {
         Task {
             do {
                 let client = APIClient(baseURLString: apiBaseURL)
-                let response = try await client.process(image: image)
+                let response = try await client.process(image: image, analyze: analyzeEnabled)
                 await MainActor.run {
                     processResponse = response
                     if !response.success {
                         statusMessage = response.error ?? "Processing failed."
+                    } else if response.transcription != nil {
+                        historyStore.add(response: response, image: image)
                     }
                     isProcessing = false
                 }

@@ -7,3 +7,6 @@ dist/
 # Output files
 output/
 *.md.backup
+
+# bv (beads viewer) local config and caches
+.bv/

@@ -7,23 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0EB5328B68FC6180C2D77E97 /* UIComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DEED7FBAE081FFF60C25F39 /* UIComponents.swift */; };
 		38A91FB7CE58DADEB01F44C1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5D6894C5C06E2B64CC0F7B8C /* Assets.xcassets */; };
 		489F8148F1F888DBA2ACA73A /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A529A58371426BB15A7FF165 /* AppConfig.swift */; };
 		5F9C549C4E5A72AF73EF0126 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2A9CD149CE4BEE095EDB4E /* Models.swift */; };
 		688EC4877229F5EF464D9E86 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBB228B55C3F50372320E46B /* APIClient.swift */; };
+		6FDA14094C0B258CACD8E879 /* CameraScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC9298689A83B5C5CE95406 /* CameraScannerView.swift */; };
+		78ADB211180CCA332DA91352 /* HistoryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CB7A531BAAA65DFD725E0E /* HistoryModels.swift */; };
+		A76A1B59C57241628E70CA2A /* HistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F96ECC5CFCC94AB92C9625 /* HistoryStore.swift */; };
 		B6870DCE500D16C96DF536A3 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7DF900EF8D0C7942E0213D /* SettingsView.swift */; };
 		B92CFE5EE8352FE8C83617E6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4B008DE704C6F504B8C45A2 /* ContentView.swift */; };
 		BE55B81D3D2F34A77A2D669D /* InkwellApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BF2CBDC55A9BEB4BF6057D /* InkwellApp.swift */; };
 		C6E20BFC46E1517DF170714F /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B0AD2C5A46D905D142A3D3 /* ResultView.swift */; };
+		CC1690E7427060435F528B32 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200ADE7CE2C49EB3B63522BE /* MarkdownText.swift */; };
 		D63A8EB5111D503B0557EA40 /* ImageEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D2788BEAD36E4CFC8E6136 /* ImageEncoder.swift */; };
+		F6EBA1193A767AAEB957A6A7 /* HistoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89CA01672582751C190DEFCB /* HistoryViews.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0DEED7FBAE081FFF60C25F39 /* UIComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIComponents.swift; sourceTree = "<group>"; };
 		16B0AD2C5A46D905D142A3D3 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		1CC9298689A83B5C5CE95406 /* CameraScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraScannerView.swift; sourceTree = "<group>"; };
+		200ADE7CE2C49EB3B63522BE /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		26A5A86D94E2F0B6EBA77B76 /* Inkwell.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Inkwell.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		27CB7A531BAAA65DFD725E0E /* HistoryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryModels.swift; sourceTree = "<group>"; };
+		58F96ECC5CFCC94AB92C9625 /* HistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryStore.swift; sourceTree = "<group>"; };
 		5D6894C5C06E2B64CC0F7B8C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		6D427D7F7137A13FF8698F5E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		77D2788BEAD36E4CFC8E6136 /* ImageEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageEncoder.swift; sourceTree = "<group>"; };
+		89CA01672582751C190DEFCB /* HistoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryViews.swift; sourceTree = "<group>"; };
 		A529A58371426BB15A7FF165 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		BBB228B55C3F50372320E46B /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		BFF35DC20345334E3C67BCD3 /* Inkwell.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Inkwell.entitlements; sourceTree = "<group>"; };
@@ -48,14 +60,20 @@
 				BBB228B55C3F50372320E46B /* APIClient.swift */,
 				A529A58371426BB15A7FF165 /* AppConfig.swift */,
 				5D6894C5C06E2B64CC0F7B8C /* Assets.xcassets */,
+				1CC9298689A83B5C5CE95406 /* CameraScannerView.swift */,
 				C4B008DE704C6F504B8C45A2 /* ContentView.swift */,
+				27CB7A531BAAA65DFD725E0E /* HistoryModels.swift */,
+				58F96ECC5CFCC94AB92C9625 /* HistoryStore.swift */,
+				89CA01672582751C190DEFCB /* HistoryViews.swift */,
 				77D2788BEAD36E4CFC8E6136 /* ImageEncoder.swift */,
 				6D427D7F7137A13FF8698F5E /* Info.plist */,
 				BFF35DC20345334E3C67BCD3 /* Inkwell.entitlements */,
 				C0BF2CBDC55A9BEB4BF6057D /* InkwellApp.swift */,
+				200ADE7CE2C49EB3B63522BE /* MarkdownText.swift */,
 				DC2A9CD149CE4BEE095EDB4E /* Models.swift */,
 				16B0AD2C5A46D905D142A3D3 /* ResultView.swift */,
 				FB7DF900EF8D0C7942E0213D /* SettingsView.swift */,
+				0DEED7FBAE081FFF60C25F39 /* UIComponents.swift */,
 			);
 			path = Inkwell;
 			sourceTree = "<group>";
@@ -135,12 +153,18 @@
 			files = (
 				688EC4877229F5EF464D9E86 /* APIClient.swift in Sources */,
 				489F8148F1F888DBA2ACA73A /* AppConfig.swift in Sources */,
+				6FDA14094C0B258CACD8E879 /* CameraScannerView.swift in Sources */,
 				B92CFE5EE8352FE8C83617E6 /* ContentView.swift in Sources */,
+				78ADB211180CCA332DA91352 /* HistoryModels.swift in Sources */,
+				A76A1B59C57241628E70CA2A /* HistoryStore.swift in Sources */,
+				F6EBA1193A767AAEB957A6A7 /* HistoryViews.swift in Sources */,
 				D63A8EB5111D503B0557EA40 /* ImageEncoder.swift in Sources */,
 				BE55B81D3D2F34A77A2D669D /* InkwellApp.swift in Sources */,
+				CC1690E7427060435F528B32 /* MarkdownText.swift in Sources */,
 				5F9C549C4E5A72AF73EF0126 /* Models.swift in Sources */,
 				C6E20BFC46E1517DF170714F /* ResultView.swift in Sources */,
 				B6870DCE500D16C96DF536A3 /* SettingsView.swift in Sources */,
+				0EB5328B68FC6180C2D77E97 /* UIComponents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,6 +228,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -260,6 +286,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;

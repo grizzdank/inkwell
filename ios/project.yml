@@ -4,6 +4,8 @@ options:
 settings:
   base:
     IPHONEOS_DEPLOYMENT_TARGET: 18.0
+    SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+    SUPPORTS_MACCATALYST: false
 targets:
   Inkwell:
     type: application
